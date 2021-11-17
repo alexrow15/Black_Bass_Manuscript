@@ -1109,6 +1109,8 @@ library(grid)
 
 plot_grid(Fig2Comp, Fig1Comp, Fig3Comp, nrow = 2, rel_widths = c(1,1,2), align = "h")
 
-grid.arrange(Fig2Comp, Fig1Comp, Fig3Comp, nrow = 2, layout_matrix = rbind(c(1,2), c(3,3)), left = textGrob("Proportion", rot = 90,  gp=gpar(fontsize=25, angle = 45)))
+tiff("Composite plot", units="in", width=10, height=8, res=300)
 
+grid.arrange(Fig2Comp, Fig1Comp, Fig3Comp, nrow = 2, layout_matrix = rbind(c(1,2), c(3,3)), left = textGrob("Proportion", rot = 90,  gp=gpar(fontsize=25, angle = 45)))
+dev.off()
 ################################################################################################################################################
