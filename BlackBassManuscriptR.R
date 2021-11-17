@@ -9,7 +9,8 @@ install.packages("emmeans")
 setwd("C:/Users/Patwo/OneDrive/Queens School Work/Fisheries Conservation Lab/2021/Tournament Mortality - Life History Papers")
 
 MyData <- read.csv(file.choose()) #"Alex Processed Fish - Aug13 2021.csv"
-summary(Mydata)
+summary(MyData)
+MyData <- filter(MyData, Species!= "Northern Pike")
 ModelData <- MyData
 
 ModelData <- ModelData %>% 
@@ -57,7 +58,7 @@ OtolithData <- OtolithData %>%
   summarise(mean.FL = mean(Fork.Length..mm.), nl=length(Fork.Length..mm.), sdl = sd(Fork.Length..mm.), sel = sdl/sqrt(nl), mean.W = mean(Weight..kg.), nw = length(Weight..kg.), sdw = sd(Weight..kg.), sew = sdw/sqrt(nw)) %>% 
   filter(nl >= 3) %>% 
   mutate(UCLL = mean.FL + qt(.975, nl - 1)*sel, LCLL = mean.FL - qt(0.975, nl - 1)*sel, UCLW = mean.W + qt(.975, nw - 1)*sew, LCLW = mean.W - qt(0.975, nw - 1)*sew) %>% 
-  filter(Age <= 16)
+  filter(Age <= 16 | Age >5)
 
 position = position_dodge(width = 0.5)
 
@@ -66,7 +67,7 @@ ggplot(OtolithData)+
   geom_point(aes(x = Age, y = mean.FL, color = Species), size = 2.5, position = position)+
   geom_errorbar(aes(x = Age, ymin = LCLL, ymax = UCLL, color = Species),
                 width = 0.25, lwd = 0.25, position = position)+
-  scale_x_continuous(name = "Otolith age", limits = c(2.75,16.25), breaks = seq(3,16,1))+
+  scale_x_continuous(name = "Otolith age", limits = c(5.75,15.25), breaks = seq(6,15,1))+
   scale_y_continuous(name = "Fork length (mm)")+
   scale_color_manual(values = c("grey", "black"), labels = c("LMB", "SMB"))+
   Theme2+
@@ -78,7 +79,7 @@ ggplot(OtolithData)+
   geom_point(aes(x = Age, y = mean.W, color = Species), size = 3, position = position)+
   geom_errorbar(aes(x = Age, ymin = LCLW, ymax = UCLW, color = Species),
                 width = 0.25, lwd = 0.25, position = position)+
-  scale_x_continuous(name = "Otolith age", limits = c(2.75,16.5), breaks = seq(3,16,1))+
+  scale_x_continuous(name = "Otolith age", limits = c(5.75,15.25), breaks = seq(6,15,1))+
   scale_y_continuous(name = "Weight (kg)", limits = c(0,3.1), breaks = seq(0,3,0.5))+
   scale_color_manual(values = c("#999999", "black"), labels = c("LMB", "SMB"))+
   Theme2+
@@ -543,7 +544,7 @@ ggplot(TIOdat, aes(x=Year, y = Effic)) +
 
 ####Updating figures for Paper 
 #Theme
-themePoster <- theme(
+Theme2 <- theme(
   axis.ticks = element_line(size = 2, colour = "black"),
   axis.text.x = element_text(size = 30, colour = "black"),
   axis.text.y = element_text(size = 30, colour = "black"),
@@ -556,11 +557,11 @@ library(dplyr)
 library(cowplot)
 
 #import Dataset 
-mydata <- read.csv("~/Desktop/School/school - Previous classes /537thesis/Data Analysis/Excel and csv files/Processed Fish Data - AlexUpdated.csv")
-summary(mydata)
-mydata <- filter(mydata, Species!= "Northern Pike")
+MyData <- read.csv("~/Desktop/School/school - Previous classes /537thesis/Data Analysis/Excel and csv files/Processed Fish Data - AlexUpdated.csv")
+summary(MyData)
+MyData <- filter(MyData, Species!= "Northern Pike")
 
-summ <- mydata %>% 
+summ <- MyData %>% 
   group_by(Species) %>% 
   summarise(meanFL = mean(Fork.Length..mm., na.rm = TRUE), 
             meanWeight = mean(Weight..kg., na.rm = TRUE))
@@ -569,16 +570,16 @@ summ <- mydata %>%
 
 #distribution of smaples for LMB and SMB --- Count
 tiff("Age Distribution of Both species - Count", units="in", width=10, height=5, res=300)
-ggplot(filter(mydata, Age!= "NA"), aes(x = factor(Age), y = ..count.., fill = Species)) +
+ggplot(filter(MyData, Age!= "NA"), aes(x = factor(Age), y = ..count.., fill = Species)) +
   geom_bar(position = "dodge") +
   scale_x_discrete(name = "Otolith Age") +
   scale_y_continuous(name = "Count") +
   scale_fill_manual(values = c('#999999',"#333333"), label = c("LMB", "SMB")) +
-  themePoster +
+  Theme2 +
   theme(legend.position = c(0.75,0.5)) +
   theme(legend.title = element_blank()) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 20, colour = "black"),
         axis.text.y = element_text(size = 20, colour = "black"),
         axis.title = element_text(size = 25, colour = "black", vjust = -0.5, face="bold"))
@@ -587,33 +588,33 @@ dev.off()
 
 #Distributiion of samples for LMB and SMB but wigh proportion 
 tiff("Age Distribution of Both species - proportion", units="in", width=10, height=5, res=300)
-ggplot(filter(mydata, Age!= "NA"), aes(x = factor(Age), y = ..count../(sum(..count..)), fill = Species)) +
+Fig3Comp <- ggplot(filter(MyData, Age!= "NA"), aes(x = factor(Age), y = ..count../(sum(..count..)), fill = Species)) +
   geom_bar(position = "dodge") +
   scale_x_discrete(name = "Otolith Age") +
-  scale_y_continuous(name = "Proportion") +
-  scale_fill_manual(values = c('#999999',"#333333"), label = c("LMB", "SMB")) +
-  themePoster +
-  theme(legend.position = c(0.75,0.5)) +
+  scale_y_continuous(name = "") +
+  scale_fill_manual(values = c('#999999',"#333333"), label = c("LMB (n=203)", "SMB (n=1088)")) +
+  theme(legend.position = c(0.85,0.5)) +
   theme(legend.title = element_blank()) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
-  theme(axis.text.x = element_text(size = 20, colour = "black"),
-        axis.text.y = element_text(size = 20, colour = "black"),
-        axis.title = element_text(size = 25, colour = "black", vjust = -0.5, face="bold"))
+  Theme2 +
+  theme(axis.text.x = element_text(size = 15, colour = "black"),
+        axis.text.y = element_text(size = 15, colour = "black"),
+        axis.title = element_text(size = 18, colour = "black", vjust = -0.5), 
+        axis.ticks.length=unit(0.25, "cm"))
 dev.off()
 
 #weight vs proportion of smb 
 tiff("length Distribution of Smallmouth - proportion", units="in", width=10, height=5, res=300)
 
-ggplot(filter(mydata, Species=="Smallmouth Bass"), aes(x = Fork.Length..mm., y = ..count../sum(..count..))) +
+ggplot(filter(MyData, Species=="Smallmouth Bass"), aes(x = Fork.Length..mm., y = ..count../sum(..count..))) +
   geom_histogram(fill = "black", binwidth = 5) +
   scale_x_continuous(name = "\nFork Length (mm)", limits = c(260,550), breaks = seq(280,520,40)) +
   scale_y_continuous(name = "Proportion", expand = c(0,0)) +
-  themePoster +
+  Theme2 +
   theme(legend.position = c(0.75,0.5)) +
   theme(legend.title = element_text(size=18)) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.title = element_text(size = 22, colour = "black", vjust = -0.5, face="bold"), 
@@ -624,16 +625,16 @@ dev.off()
 #weight vs proportion of LMB 
 tiff("FL Distribution of Largemouth  - proportion", units="in", width=10, height=5, res=300)
 
-ggplot(filter(mydata, Species == "Largemouth Bass"), aes(x = Fork.Length..mm., y = ..count../sum(..count..))) +
+ggplot(filter(MyData, Species == "Largemouth Bass"), aes(x = Fork.Length..mm., y = ..count../sum(..count..))) +
   geom_histogram(binwidth = 4, fill = "black") +
   scale_x_continuous(name = "\nFork Length (mm)", limits = c(260,520), breaks = seq(280,520,40)) +
   scale_y_continuous(name = "Proportion", expand = c(0,0), limit = c(0,0.075)) +
   scale_fill_manual(values = c('#999999',"#333333"), label = c("LMB", "SMB")) +
-  themePoster +
+  Theme2 +
   theme(legend.position = c(0.25,0.5)) +
   theme(legend.title = element_blank()) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.title = element_text(size = 22, colour = "black", vjust = -0.5, face="bold")) +
@@ -644,21 +645,20 @@ dev.off()
 
 tiff("FL Distribution of both species  - proportion", units="in", width=10, height=5, res=300)
 
-ggplot(filter(mydata), aes(x = Fork.Length..mm., y = ..count../sum(..count..), fill = Species)) +
+Fig2Comp <- ggplot(filter(MyData), aes(x = Fork.Length..mm., y = ..count../sum(..count..), fill = Species)) +
   geom_histogram(binwidth = 6, position = "dodge") +
-  scale_x_continuous(name = "\nFork Length (mm)", limits = c(260,520), breaks = seq(280,520,40)) +
-  scale_y_continuous(name = "Proportion", expand = c(0,0), limit = c(0,0.075)) +
+  scale_x_continuous(name = "Fork Length (mm)", limits = c(260,550), breaks = seq(300,550,100)) +
+  scale_y_continuous(name = "", expand = c(0,0), limit = c(0,0.1), breaks = seq(0,0.09,0.03)) +
   scale_fill_manual(values = c('#999999',"#333333"), label = c("LMB", "SMB")) +
-  themePoster +
-  theme(legend.position = c(0.25,0.5)) +
+  Theme2 +
+  theme(legend.position = "none") +
   theme(legend.title = element_blank()) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
-  theme(axis.text.x = element_text(size = 20, colour = "black"),
-        axis.text.y = element_text(size = 20, colour = "black"),
-        axis.title = element_text(size = 24, colour = "black", vjust = -0.5, face="bold"), 
-        axis.ticks.length=unit(0.25, "cm")) +
-  theme(axis.text.x = element_text(angle = 315)) 
+  Theme2 +
+  theme(axis.text.x = element_text(size = 15, colour = "black"),
+        axis.text.y = element_text(size = 15, colour = "black"),
+        axis.title = element_text(size = 18, colour = "black", vjust = -0.5), 
+        axis.ticks.length=unit(0.25, "cm")) 
 dev.off()
 
 
@@ -672,13 +672,13 @@ dev.off()
 
 tiff("Age vs FL in both species Scatterplot", units="in", width=10, height=5, res=300)
 
-ggplot(mydata, aes(x = Age, y = Fork.Length..mm., colour = Species)) +
+ggplot(MyData, aes(x = Age, y = Fork.Length..mm., colour = Species)) +
   stat_summary(fun.y=mean, geom="point", position = position_dodge(width = 0.5), size =4) +
   stat_summary(fun.data=mean_cl_normal,geom="errorbar", width = 0.4, position = position_dodge(width = 0.5)) +
   scale_y_continuous(name = "Fork Length (mm)") +
   scale_x_continuous(name = "Otolith Age", limits = c(0,22), breaks = seq(0,20,2)) +
   scale_colour_manual(values = c('#999999',"#333333"), labels = c("LMB", "SMB")) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.title = element_text(size = 22, colour = "black", vjust = -0.5, face="bold"),
@@ -691,14 +691,14 @@ dev.off()
 #weight vs age between LM and SMB
 tiff("Age vs weight in both species Scatterplot", units="in", width=10, height=5, res=300)
 
-mydataPlotAge <- filter(mydata, Age>=3 & Age<=16)
-ggplot(mydataPlotAge, aes(x = Age, y = Weight..kg., colour = Species)) +
+MyDataPlotAge <- filter(MyData, Age>=3 & Age<=16)
+ggplot(MyDataPlotAge, aes(x = Age, y = Weight..kg., colour = Species)) +
   stat_summary(fun.y=mean, geom="point", position = position_dodge(width = 0.5), size =4) +
   stat_summary(fun.data=mean_cl_normal,geom="errorbar", width = 0.4, position = position_dodge(width = 0.5)) +
   scale_y_continuous(name = "Weight (Kg)", limits = c(0,3), breaks = seq(0,3,0.5)) +
   scale_x_continuous(name = "Otolith Age", limits = c(2,17), breaks = seq(3,16,1)) +
   scale_colour_manual(values = c('#999999',"#333333"), labels = c("LMB", "SMB")) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.title = element_text(size = 22, colour = "black", vjust = -0.5, face="bold"),
@@ -711,13 +711,13 @@ dev.off()
 
 ##### nonlinmod for weihght to lengh  
 
-nonlinmod <- nls(Weight..kg.~A*Fork.Length..mm.^(B), data = (filter(mydata, Species=="Smallmouth Bass")), start = list(A=0.000000005, B = 3))
+nonlinmod <- nls(Weight..kg.~A*Fork.Length..mm.^(B), data = (filter(MyData, Species=="Smallmouth Bass")), start = list(A=0.000000005, B = 3))
 summary(nonlinmod)
 
 
 tiff("Fork L vs Weight for SMB", units="in", width=10, height=5, res=300)
 
-ggplot(filter(mydata, Species=="Smallmouth Bass"), aes(x = Fork.Length..mm., y = Weight..kg.)) +
+ggplot(filter(MyData, Species=="Smallmouth Bass"), aes(x = Fork.Length..mm., y = Weight..kg.)) +
   geom_point() +
   scale_x_continuous(name = "Fork Length (mm)", limits = c(250,550), breaks = seq(250,600,50)) +
   scale_y_continuous(name = "Weight (Kg)", limits = c(0,3.5), breaks = seq(0,3.5,0.5)) +
@@ -728,7 +728,7 @@ ggplot(filter(mydata, Species=="Smallmouth Bass"), aes(x = Fork.Length..mm., y =
               fullrange = TRUE, 
               size = 2) +
   annotate(geom="text", x=315, y=3, label = expression("y = 4.08E-08x"^{"2.90"} ), parse = TRUE, size = 10) + #fomrula found from the nonlinmod above
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 20, colour = "black"),
         axis.text.y = element_text(size = 20, colour = "black"),
         axis.title = element_text(size = 22, colour = "black", vjust = -0.5, face="bold"),
@@ -742,13 +742,13 @@ dev.off()
 
 #weight vs FOrk length in Largies 
 
-nonlinmod <- nls(Weight..kg.~A*Fork.Length..mm.^(B), data = (filter(mydata, Species=="Largemouth Bass")), start = list(A=0.000000005, B = 3))
+nonlinmod <- nls(Weight..kg.~A*Fork.Length..mm.^(B), data = (filter(MyData, Species=="Largemouth Bass")), start = list(A=0.000000005, B = 3))
 summary(nonlinmod)
 
 
 tiff("Fork L vs Weight for LMB", units="in", width=10, height=5, res=300)
 
-ggplot(filter(mydata, Species=="Largemouth Bass"), aes(x = Fork.Length..mm., y = Weight..kg.)) +
+ggplot(filter(MyData, Species=="Largemouth Bass"), aes(x = Fork.Length..mm., y = Weight..kg.)) +
   geom_point() +
   scale_x_continuous(name = "Fork Length (mm)", limits = c(250,550), breaks = seq(250,600,50)) +
   scale_y_continuous(name = "Weight (Kg)", limits = c(0,3.5), breaks = seq(0,3.5,0.5)) +
@@ -759,7 +759,7 @@ ggplot(filter(mydata, Species=="Largemouth Bass"), aes(x = Fork.Length..mm., y =
               fullrange = TRUE, 
               size = 2) +
   annotate(geom="text", x=315, y=3, label = expression("y = 1.56E-08x"^{"3.03"} ), parse = TRUE, size = 10) + #fomrula found from the nonlinmod above
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 20, colour = "black"),
         axis.text.y = element_text(size = 20, colour = "black"),
         axis.title = element_text(size = 22, colour = "black", vjust = -0.5, face="bold"),
@@ -774,13 +774,13 @@ dev.off()
 #year class vs count in said year class ---- ALL FISH 
 tiff("Year class All Fish 2017", units="in", width=5, height=5, res=300)
 
-ggplot(filter(mydata, Year.Caught==2017), aes(x=as.factor(Year.Class), y = ..count..)) +
+ggplot(filter(MyData, Year.Caught==2017), aes(x=as.factor(Year.Class), y = ..count..)) +
   geom_bar(position = "dodge", fill = "black") +
-  themePoster  +
+  Theme2  +
   theme(legend.position = c(0.75,0.5)) +
   theme(legend.title = element_text(size=18)) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.ticks=element_blank(),
         axis.text.y = element_text(size = 17, colour = "black"),
@@ -794,13 +794,13 @@ dev.off()
 #2018 YEar class
 tiff("Year class All Fish 2018", units="in", width=5, height=5, res=300)
 
-ggplot(filter(mydata, Year.Caught==2018), aes(x=as.factor(Year.Class), y = ..count..)) +
+ggplot(filter(MyData, Year.Caught==2018), aes(x=as.factor(Year.Class), y = ..count..)) +
   geom_bar(position = "dodge", fill = "black") +
-  themePoster  +
+  Theme2  +
   theme(legend.position = c(0.75,0.5)) +
   theme(legend.title = element_text(size=18)) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.ticks=element_blank(),
         axis.text.y = element_text(size = 17, colour = "black"),
@@ -814,13 +814,13 @@ dev.off()
 #2019 
 tiff("Year class All Fish 2019", units="in", width=5, height=5, res=300)
 
-ggplot(filter(mydata, Year.Caught==2019, Year.Class!= "NA"), aes(x=(as.factor(Year.Class)), y = ..count.., na.rm = TRUE)) +
+ggplot(filter(MyData, Year.Caught==2019, Year.Class!= "NA"), aes(x=(as.factor(Year.Class)), y = ..count.., na.rm = TRUE)) +
   geom_bar(position = "dodge", fill = "black") +
-  themePoster  +
+  Theme2  +
   theme(legend.position = c(0.75,0.5)) +
   theme(legend.title = element_text(size=18)) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.ticks=element_blank(),
         axis.text.y = element_text(size = 17, colour = "black"),
@@ -834,13 +834,13 @@ dev.off()
 ##all samples combined (2012-2020)
 tiff("Year class All Fish ", units="in", width=5, height=5, res=300)
 
-ggplot(filter(mydata,Year.Class!= "NA"), aes(x=(as.factor(Year.Class)), y = ..count.., na.rm = TRUE)) +
+ggplot(filter(MyData,Year.Class!= "NA"), aes(x=(as.factor(Year.Class)), y = ..count.., na.rm = TRUE)) +
   geom_bar(position = "dodge", fill = "black") +
-  themePoster  +
+  Theme2  +
   theme(legend.position = c(0.75,0.5)) +
   theme(legend.title = element_text(size=18)) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.ticks=element_blank(),
         axis.text.y = element_text(size = 17, colour = "black"),
@@ -855,16 +855,16 @@ dev.off()
 
 tiff("YC both Species 2013", units="in", width=5, height=5, res=300)
 
-ggplot(filter(mydata, Year.Caught==2013, Year.Class!="NA"), aes(x=as.factor(Year.Class), y = ..count.., fill = Species)) +
+ggplot(filter(MyData, Year.Caught==2013, Year.Class!="NA"), aes(x=as.factor(Year.Class), y = ..count.., fill = Species)) +
   geom_bar(position = "dodge") +
   scale_fill_manual(values = c('#999999',"#333333"), labels = c("LMB", "SMB")) +
   scale_x_discrete(name = "Year Class") +
   scale_y_continuous(name = "Frequency", expand = c(0,0)) +
-  themePoster  +
+  Theme2  +
   theme(legend.position = c(0.85,0.7)) +
   theme(legend.title = element_blank()) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.ticks=element_blank(),
@@ -875,16 +875,16 @@ dev.off()
 #2014 
 tiff("YC both Species 2014", units="in", width=5, height=5, res=300)
 
-ggplot(filter(mydata, Year.Caught==2014, Year.Class!="NA"), aes(x=as.factor(Year.Class), y = ..count.., fill = Species)) +
+ggplot(filter(MyData, Year.Caught==2014, Year.Class!="NA"), aes(x=as.factor(Year.Class), y = ..count.., fill = Species)) +
   geom_bar(position = "dodge") +
   scale_fill_manual(values = c('#999999',"#333333"), labels = c("LMB", "SMB")) +
   scale_x_discrete(name = "Year Class") +
   scale_y_continuous(name = "Frequency", expand = c(0,0)) +
-  themePoster  +
+  Theme2  +
   theme(legend.position = c(0.85,0.7)) +
   theme(legend.title = element_blank()) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.ticks=element_blank(),
@@ -895,16 +895,16 @@ dev.off()
 #2015
 tiff("YC both Species 2015", units="in", width=5, height=5, res=300)
 
-ggplot(filter(mydata, Year.Caught==2015, Year.Class!="NA"), aes(x=as.factor(Year.Class), y = ..count.., fill = Species)) +
+ggplot(filter(MyData, Year.Caught==2015, Year.Class!="NA"), aes(x=as.factor(Year.Class), y = ..count.., fill = Species)) +
   geom_bar(position = "dodge") +
   scale_fill_manual(values = c('#999999',"#333333"), labels = c("LMB", "SMB")) +
   scale_x_discrete(name = "Year Class") +
   scale_y_continuous(name = "Frequency", expand = c(0,0)) +
-  themePoster  +
+  Theme2  +
   theme(legend.position = c(0.25,0.7)) +
   theme(legend.title = element_blank()) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.ticks=element_blank(),
@@ -915,16 +915,16 @@ dev.off()
 #2016
 tiff("YC both Species 2016", units="in", width=5, height=5, res=300)
 
-ggplot(filter(mydata, Year.Caught==2016, Year.Class!="NA"), aes(x=as.factor(Year.Class), y = ..count.., fill = Species)) +
+ggplot(filter(MyData, Year.Caught==2016, Year.Class!="NA"), aes(x=as.factor(Year.Class), y = ..count.., fill = Species)) +
   geom_bar(position = "dodge") +
   scale_fill_manual(values = c('#999999',"#333333"), labels = c("LMB", "SMB")) +
   scale_x_discrete(name = "Year Class") +
   scale_y_continuous(name = "Frequency", expand = c(0,0)) +
-  themePoster  +
+  Theme2  +
   theme(legend.position = c(0.25,0.7)) +
   theme(legend.title = element_blank()) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.ticks=element_blank(),
@@ -958,7 +958,7 @@ ggplot(LMCatchCurve, aes(x = Age, y = LNage)) +
   scale_y_continuous(name = "Log Number at Age", limits = c(1,4),breaks = seq(1,4,0.5), expand = c(0,0)) +
   scale_x_continuous(breaks = seq(3,16,1), name = "Age") +
   geom_abline(slope = -.29, intercept = 6.1, col = "black", size = 1.5) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.ticks=element_blank(),
@@ -986,7 +986,7 @@ ggplot(filter(SMBCC,Age<17), aes(x = Age, y = LNage)) +
   scale_y_continuous(name = "Log Number at Age", limits = c(1,7),breaks = seq(1,7,1), expand = c(0,0)) +
   scale_x_continuous(breaks = seq(3,16,1), name = "Age") +
   geom_abline(slope = -.32, intercept = 7.64, col = "black", size = 1.5) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.ticks=element_blank(),
@@ -1016,11 +1016,11 @@ ggplot(filter(Floy, Species=="SMB"), aes(x = as.numeric(Forked.Length), y = ..co
   scale_x_continuous(name = "\nFork Length (mm)", limits = c(290,550), breaks = seq(320,520,40)) +
   scale_y_continuous(name = "Proportion", expand = c(0,0)) +
   scale_fill_manual(values = c('#999999',"#333333")) +
-  themePoster +
+  Theme2 +
   theme(legend.position = c(0.75,0.5)) +
   theme(legend.title = element_text(size=18)) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.title = element_text(size = 22, colour = "black", vjust = -0.5, face="bold")) +
@@ -1033,11 +1033,11 @@ ggplot(filter(Floy, Species=="LMB"), aes(x = as.numeric(Forked.Length), y = ..co
   geom_histogram(binwidth = 4, fill = "black") +
   scale_x_continuous(name = "\nFork Length (mm)", limits = c(290,550), breaks = seq(320,520,40)) +
   scale_y_continuous(name = "Proportion", expand = c(0,0)) +
-  themePoster +
+  Theme2 +
   theme(legend.position = c(0.75,0.5)) +
   theme(legend.title = element_text(size=18)) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.title = element_text(size = 22, colour = "black", vjust = -0.5, face="bold")) +
@@ -1047,15 +1047,15 @@ dev.off()
 
 ##proportion with weight
 tiff("weight proportion for SMB", units="in", width=6, height=5, res=300)
-ggplot(filter(mydata, Species=="Smallmouth Bass"), aes(x = Weight..kg., y = ..count../sum(..count..))) +
+ggplot(filter(MyData, Species=="Smallmouth Bass"), aes(x = Weight..kg., y = ..count../sum(..count..))) +
   geom_histogram(binwidth = 0.14, fill = "black")+
   scale_x_continuous(name = "Weight (Kg)", limits = c(0,3.5), breaks = seq(0,5,1)) +
   scale_y_continuous(name = "Proportion", expand = c(0,0)) +
-  themePoster +
+  Theme2 +
   theme(legend.position = c(0.75,0.5)) +
   theme(legend.title = element_text(size=18)) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.title = element_text(size = 22, colour = "black", vjust = -0.5, face="bold"), 
@@ -1065,15 +1065,15 @@ dev.off()
 
 #weight proportion for LMB 
 tiff("weight proportion for LMB", units="in", width=6, height=5, res=300)
-ggplot(filter(mydata, Species=="Largemouth Bass"), aes(x = Weight..kg., y = ..count../sum(..count..))) +
+ggplot(filter(MyData, Species=="Largemouth Bass"), aes(x = Weight..kg., y = ..count../sum(..count..))) +
   geom_histogram(binwidth = 0.1, fill = "black")+
   scale_x_continuous(name = "Weight (Kg)", limits = c(0,3.5), breaks = seq(0,5,1)) +
   scale_y_continuous(name = "Proportion", expand = c(0,0), limit = c(0,0.15), breaks = seq(0,0.15,0.05)) +
-  themePoster +
+  Theme2 +
   theme(legend.position = c(0.75,0.5)) +
   theme(legend.title = element_text(size=18)) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
+  Theme2 +
   theme(axis.text.x = element_text(size = 17, colour = "black"),
         axis.text.y = element_text(size = 17, colour = "black"),
         axis.title = element_text(size = 22, colour = "black", vjust = -0.5, face="bold"), 
@@ -1083,20 +1083,32 @@ dev.off()
 #weight proportion for both species combined 
 tiff("weight proportion for both species combined ", units="in", width=10, height=5, res=300)
 
-ggplot(mydata, aes(x = Weight..kg., y = ..count../sum(..count..), fill = Species)) +
+Fig1Comp <- ggplot(MyData, aes(x = Weight..kg., y = ..count../sum(..count..), fill = Species)) +
   geom_histogram(binwidth = 0.15, position = "dodge") +
   scale_x_continuous(name = "Weight (Kg)", limits = c(0,3.5), breaks = seq(0,5,1)) +
-  scale_y_continuous(name = "Proportion", expand = c(0,0)) +
+  scale_y_continuous(name = "", expand = c(0,0)) +
   scale_fill_manual(values = c('#999999',"#333333"), labels = c("LMB", "SMB")) +
-  themePoster +
-  theme(legend.position = c(0.85,0.5)) +
+  Theme2 +
+  theme(legend.position = "none") +
   theme(legend.title = element_blank()) +
   theme(legend.text = element_text(size=14)) +
-  themePoster +
-  theme(axis.text.x = element_text(size = 20, colour = "black"),
-        axis.text.y = element_text(size = 20, colour = "black"),
-        axis.title = element_text(size = 24, colour = "black", vjust = -0.5, face="bold"), 
+  Theme2 +
+  theme(axis.text.x = element_text(size = 15, colour = "black"),
+        axis.text.y = element_text(size = 15, colour = "black"),
+        axis.title = element_text(size = 18, colour = "black", vjust = -0.5), 
         axis.ticks.length=unit(0.25, "cm")) 
 dev.off()
+
+
+
+###Composite plot for age , weight, and length distribnution 
+
+library(cowplot)
+library(gridExtra)
+library(grid)
+
+plot_grid(Fig2Comp, Fig1Comp, Fig3Comp, nrow = 2, rel_widths = c(1,1,2), align = "h")
+
+grid.arrange(Fig2Comp, Fig1Comp, Fig3Comp, nrow = 2, layout_matrix = rbind(c(1,2), c(3,3)), left = textGrob("Proportion", rot = 90,  gp=gpar(fontsize=25, angle = 45)))
 
 ################################################################################################################################################
