@@ -10,7 +10,10 @@ setwd("C:/Users/Patwo/OneDrive/Queens School Work/Fisheries Conservation Lab/202
 
 MyData <- read.csv(file.choose()) #"Alex Processed Fish - Aug13 2021.csv"
 summary(MyData)
+MyData <- MyData[1:1294,] #remove NYDEC fish
+tail(MyData)
 MyData <- filter(MyData, Species!= "Northern Pike")
+
 ModelData <- MyData
 
 ModelData <- ModelData %>% 
@@ -37,9 +40,43 @@ Theme2 <- theme(
   legend.key = element_rect(colour = "transparent", fill = "transparent"))
 
 
+######################CATCH CURVE Estimate ---- Nov 30 - 2021#########################################
+library(fishmethods)
+smb <- MyData %>% 
+  filter(Species=="Smallmouth Bass")
+lmb <- MyData %>% 
+  filter(Species=="Largemouth Bass")
+
+(SMBagesurv = agesurv(age = smb[,33], full = 7))
+(LMBagesurv = agesurv(age = lmb[,33], full = 7))
+
+SMBagesurv$results
+
+
+CCTest <- SMBagesurv$data
+lmTestCC <- lm(data = CCTest, age~number)
+CCTest$predicted <- predict(lmTestCC)
+CCTest$residuals <- residuals(lmTestCC)
+CCTest$LnAge <- log(CCTest$number)
+CCTest$lognumber <- log(CCTest$number)
+
+WeightedCC <- lm(data = CCTest,LnAge~age, weights = number)
+summary(WeightedCC)
 
 
 
+### testing below the ues of weihgting using sample size 
+shapiro.test(residuals(WeightedCC))
+compmod.lmod <- CCTest %>% 
+  mutate(resid = residuals(WeightedCC),
+         pred = fitted(WeightedCC))
+summary(lm(abs(resid) ~ pred, data = compmod.lmod))
+
+
+
+
+
+###################3
 OtolithData <- MyData %>% 
   select(Age, Fork.Length..mm., Species, Weight..kg.) %>% 
   na.omit(OtolithData)
@@ -295,7 +332,7 @@ test
 
 ################################################################################################################################################
 
-dat <- read.csv(file.choose())
+dat <- read.csv(file.choose()) #tourny summary 2021
 
 str(dat)
 names(dat)
@@ -309,6 +346,98 @@ dat %>%
             sumAng = sum(Anglers),
             sumFish = sum(FishCaught))
 sum(dat$FishCaught, na.rm = TRUE)
+
+
+#################################### NMDS Plot #####################################################
+
+datNMDS <- read.csv(file.choose())
+names(datNMDS)
+datNMDS <- filter(datNMDS, Location!="Cornwall")
+
+library(vegan)
+library(ggplot2)
+
+#####NEED to figure this out below - not working 
+
+NumDat <- select(datNMDS, Anglers, Corrected.Dfish)
+summary(NumDat)
+NumDat <- NumDat[7:47,]
+CatDat <- select(datNMDS, Number.Fish.In.Livewell, ReportDF)
+CatDat <- CatDat[7:47,]
+str(CatDat)
+
+m_NumDat <- as.matrix(NumDat)
+
+nmds = metaMDS(m_NumDat, distance = "bray")
+nmds
+
+stressplot(nmds)
+
+en = envfit(nmds, CatDat, permutations = 999, na.rm = TRUE)
+
+en
+plot(nmds)
+plot(en)
+
+data.scores = as.data.frame(scores(nmds))
+data.scores$WeighType <- datNMDS$Weigh.In.Type
+data.scores$DeadFishPen <- datNMDS$Dead.Fish.Penalty[7:47,]
+data.scores$NumbFishLivewell <- factor(datNMDS$Number.Fish.In.Livewell[7:47,])
+data.scores$LakeO <- datNMDS$LakeO[7:47,]
+
+
+en_coord_cont = as.data.frame(scores(en, "vectors")) * ordiArrowMul(en)
+en_coord_cat = as.data.frame(scores(en, "factors")) * ordiArrowMul(en)
+
+gg = ggplot(data = data.scores, aes(x = NMDS1, y = NMDS2)) + 
+  geom_point(data = data.scores, aes(colour = WeighType), size = 3, alpha = 0.5) + 
+  scale_colour_manual(values = c("orange", "steelblue", "pink", "green")) + 
+  theme(axis.title = element_text(size = 10, face = "bold", colour = "grey30"), 
+        panel.background = element_blank(), panel.border = element_rect(fill = NA, colour = "grey30"), 
+        axis.ticks = element_blank(), axis.text = element_blank(), legend.key = element_blank(), 
+        legend.title = element_text(size = 10, face = "bold", colour = "grey30"), 
+        legend.text = element_text(size = 9, colour = "grey30")) +
+  labs(colour = "WeighInType")
+
+gg
+
+gg = ggplot(data = data.scores, aes(x = NMDS1, y = NMDS2)) + 
+  geom_point(data = data.scores, aes(colour = DeadFishPen), size = 3, alpha = 0.5) + 
+  scale_colour_manual(values = c("orange", "steelblue", "pink", "green", "yellow")) + 
+  theme(axis.title = element_text(size = 10, face = "bold", colour = "grey30"), 
+        panel.background = element_blank(), panel.border = element_rect(fill = NA, colour = "grey30"), 
+        axis.ticks = element_blank(), axis.text = element_blank(), legend.key = element_blank(), 
+        legend.title = element_text(size = 10, face = "bold", colour = "grey30"), 
+        legend.text = element_text(size = 9, colour = "grey30")) +
+  labs(colour = "DeadFishPenalty")
+
+gg
+
+gg = ggplot(data = data.scores, aes(x = NMDS1, y = NMDS2)) + 
+  geom_point(data = data.scores, aes(colour = NumbFishLivewell), size = 3, alpha = 0.5) + 
+  scale_colour_manual(values = c("orange", "steelblue", "pink", "green", "yellow")) + 
+  theme(axis.title = element_text(size = 10, face = "bold", colour = "grey30"), 
+        panel.background = element_blank(), panel.border = element_rect(fill = NA, colour = "grey30"), 
+        axis.ticks = element_blank(), axis.text = element_blank(), legend.key = element_blank(), 
+        legend.title = element_text(size = 10, face = "bold", colour = "grey30"), 
+        legend.text = element_text(size = 9, colour = "grey30")) +
+  labs(colour = "NumbFishInLivewell")
+
+gg
+
+gg = ggplot(data = data.scores, aes(x = NMDS1, y = NMDS2)) + 
+  geom_point(data = data.scores, aes(colour = LakeO), size = 3, alpha = 0.5) + 
+  scale_colour_manual(values = c("orange", "steelblue")) + 
+  theme(axis.title = element_text(size = 10, face = "bold", colour = "grey30"), 
+        panel.background = element_blank(), panel.border = element_rect(fill = NA, colour = "grey30"), 
+        axis.ticks = element_blank(), axis.text = element_blank(), legend.key = element_blank(), 
+        legend.title = element_text(size = 10, face = "bold", colour = "grey30"), 
+        legend.text = element_text(size = 9, colour = "grey30")) +
+  labs(colour = "LakeO")
+
+gg
+
+
 
 #man efficiency 
 meanEffic <- dat %>% 
